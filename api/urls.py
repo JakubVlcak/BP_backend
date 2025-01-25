@@ -30,6 +30,7 @@ router.register(r'records', views.RecordViewSet)
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
+    path('register/', views.RegisterView.as_view(), name='register'),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('upload/', views.FitFileParseView.as_view(), name='fit-file-upload'),

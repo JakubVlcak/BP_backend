@@ -13,6 +13,9 @@ from fitparse import FitFile
 from decimal import Decimal
 from decimal import ROUND_HALF_UP
 
+from .serializers import RegisterSerializer
+
+
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 
@@ -38,9 +41,13 @@ class ActivitiesViewSet(viewsets.ModelViewSet):
     ViewSet for managing Activities.
     Provides CRUD operations.
     """
-    queryset = Activities.objects.all()
     serializer_class = ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Activities.objects.none()  
+
+    def get_queryset(self):
+        # Filter activities for the authenticated user
+        return Activities.objects.filter(user=self.request.user)
 
 
 class RecordViewSet(viewsets.ModelViewSet):
@@ -131,3 +138,15 @@ class LoginView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             return Response({"token": token.key})
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Save the new user
+            return Response(
+                {"message": "User registered successfully!", "user": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
