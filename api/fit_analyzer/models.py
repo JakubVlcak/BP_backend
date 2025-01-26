@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 
 
 
-
 class Activities(models.Model):
     ActivityID = models.BigAutoField(primary_key=True)  
     user = models.ForeignKey(User, on_delete=models.CASCADE)  
@@ -11,8 +10,6 @@ class Activities(models.Model):
 
     def __str__(self):
         return f"Activity {self.ActivityID} by {self.user.userName}"
-
-
 
 class Record(models.Model):
     RecordID = models.BigAutoField(primary_key=True)  

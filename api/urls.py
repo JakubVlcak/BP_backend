@@ -18,7 +18,22 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from api.fit_analyzer import views
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
 
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Your API Title",
+        default_version='v1',
+        description="API documentation for your project",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="your-email@example.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 
 
@@ -26,7 +41,6 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 router.register(r'activities', views.ActivitiesViewSet)
-router.register(r'records', views.RecordViewSet)
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
@@ -34,4 +48,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('upload/', views.FitFileParseView.as_view(), name='fit-file-upload'),
+    path('api/activities/<int:activity_id>/records/', views.RecordViewSet.as_view({'get': 'list', 'post': 'create'}), name='record-list'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
 ]

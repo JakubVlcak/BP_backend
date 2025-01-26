@@ -58,6 +58,27 @@ class RecordViewSet(viewsets.ModelViewSet):
     queryset = Record.objects.all()
     serializer_class = RecordSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+    lookup_field = 'activity_id' 
+    lookup_url_kwarg = 'activity_id'
+
+    def get_queryset(self):
+        activity_id = self.kwargs.get(self.lookup_url_kwarg)
+
+        if not activity_id:
+            return Record.objects.none() 
+
+        
+        try:
+            activity = Activities.objects.get(ActivityID=activity_id)
+            if activity.user != self.request.user:
+                return Response({"error": "Forbidden activity"}, status=status.HTTP_403_FORBIDDEN)
+        except Activities.DoesNotExist:
+            return Response({"error": "Activity not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        queryset = Record.objects.filter(activity_id=activity_id)
+        return queryset
+
 
 class FitFileParseView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -136,7 +157,8 @@ class LoginView(APIView):
 
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key})
+            return Response({"token": token.key,
+                             "username":username})
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class RegisterView(APIView):

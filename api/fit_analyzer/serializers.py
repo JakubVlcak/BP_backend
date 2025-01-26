@@ -37,7 +37,6 @@ class RecordSerializer(serializers.ModelSerializer):
 
 
 class ActivitiesSerializer(serializers.ModelSerializer):
-    # Nested serialization to include related records
     records = RecordSerializer(many=True, read_only=True)
 
     class Meta:
@@ -46,12 +45,11 @@ class ActivitiesSerializer(serializers.ModelSerializer):
             "ActivityID",
             "user",
             "timeCreated",
-            "records",  # Includes all related records
+            "records", 
         ]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    # Define password field explicitly to ensure write-only behavior
     password = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
     confirm_password = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
 
@@ -69,16 +67,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             "is_active",
             "date_joined",
         ]
-        read_only_fields = ["is_staff", "is_active", "date_joined"]  # Prevent modifications on these fields
+        read_only_fields = ["is_staff", "is_active", "date_joined"] 
 
     def validate(self, data):
-        # Check if password and confirm_password match
         if data["password"] != data["confirm_password"]:
             raise serializers.ValidationError({"password": "Passwords do not match."})
         return data
 
     def create(self, validated_data):
-        # Remove confirm_password before creating the user
         validated_data.pop("confirm_password")
         user = User.objects.create_user(
             username=validated_data["username"],
@@ -88,3 +84,4 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data["email"],
         )
         return user
+    
