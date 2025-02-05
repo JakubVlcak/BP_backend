@@ -140,7 +140,7 @@ def round_to_3(value):
         value = Decimal(value).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
         
         # If value exceeds the allowed range, you can either truncate it or raise an error
-        max_value = Decimal('999.999')  # Since scale is 12, total value must be < 1000
+        max_value = Decimal('999999.999')  # Since scale is 12, total value must be < 1000
         if abs(value) > max_value:
             value = max_value  # Or handle as per your requirements (e.g., raise an error)
         return value

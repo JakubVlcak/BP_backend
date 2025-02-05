@@ -18,11 +18,11 @@ class Record(models.Model):
     position_lat = models.BigIntegerField(blank=True, null=True) 
     position_long = models.BigIntegerField(blank=True, null=True)  
     cadence = models.BigIntegerField(blank=True, null=True)
-    distance = models.DecimalField(max_digits=15, decimal_places=12, blank=True, null=True)
+    distance = models.DecimalField(max_digits=15, decimal_places=3, blank=True, null=True)
     power = models.BigIntegerField(blank=True, null=True)
     temperature = models.BigIntegerField(blank=True, null=True)
-    altitude = models.DecimalField(max_digits=15, decimal_places=9, blank=True, null=True)
-    speed = models.DecimalField(max_digits=15, decimal_places=9, blank=True, null=True)
+    altitude = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    speed = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
     heartRate = models.BigIntegerField(blank=True, null=True)
 
     def __str__(self):
