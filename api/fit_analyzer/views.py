@@ -96,8 +96,7 @@ class FitFileParseView(APIView):
             # Use the fitparse library to parse the FIT file
             fitfile = FitFile(fit_file)
             
-            user = User.objects.first()
-            # user = request.user
+            user = request.user
             # if not user.is_authenticated:
             #     return Response({"error": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
