@@ -8,8 +8,7 @@ class Activities(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  
     timeCreated = models.DateTimeField()
     distance = models.DecimalField(max_digits=15, decimal_places=3, blank=True, null=True)
-    elapsed_time = models.CharField(max_length=100)
-
+    elapsed_time = models.DurationField()
     def __str__(self):
         return f"Activity {self.ActivityID} by {self.user.userName}"
 
