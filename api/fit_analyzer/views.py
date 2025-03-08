@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.models import Group, User
 from django.utils.timezone import now
 from rest_framework import permissions, viewsets
@@ -12,14 +13,14 @@ from rest_framework import status
 from fitparse import FitFile 
 from decimal import Decimal
 from decimal import ROUND_HALF_UP
-import datetime
+from datetime import datetime
 
 from .serializers import RegisterSerializer
 
 
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-
+logger = logging.getLogger(__name__)
 class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
@@ -49,7 +50,7 @@ class ActivitiesViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Filter activities for the authenticated user
         return Activities.objects.filter(user=self.request.user)
-
+    
 
 class RecordViewSet(viewsets.ModelViewSet):
     """
@@ -101,7 +102,25 @@ class FitFileParseView(APIView):
                 data = {}
                 for field in record:
                     data[field.name] = field.value
-                records_to_create.append(Record(
+                self.append_record(new_activity, records_to_create, data)
+            if records_to_create:
+                first = records_to_create[0].timestamp
+                last = records_to_create[-1].timestamp
+                new_activity.elapsed_time = last - first
+                new_activity.distance = records_to_create[-1].distance
+                new_activity.time_started = first
+                new_activity.save()
+        
+
+            # Bulk create records
+            Record.objects.bulk_create(records_to_create)
+            return Response({"message": "File parsed and data saved successfully."}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def append_record(self, new_activity, records_to_create, data):
+        records_to_create.append(Record(
                     activity = new_activity,
                     timestamp=data.get('timestamp'),
                     position_lat=data.get('position_lat'),
@@ -114,19 +133,6 @@ class FitFileParseView(APIView):
                     heartRate=data.get('heart_rate'),
                     speed=data.get('speed')
                 ))
-            if records_to_create:
-                first = records_to_create[0].timestamp
-                last = records_to_create[-1].timestamp
-                new_activity.elapsed_time = last - first
-                new_activity.distance = records_to_create[-1].distance
-                new_activity.save()
-        
-
-            # Bulk create records
-            Record.objects.bulk_create(records_to_create)
-            return Response({"message": "File parsed and data saved successfully."}, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

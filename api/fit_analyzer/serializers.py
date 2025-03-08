@@ -69,8 +69,10 @@ class ActivitiesSerializer(serializers.ModelSerializer):
 
 
     def validate(self, data):
-        if data["password"] != data["confirm_password"]:
-            raise serializers.ValidationError({"password": "Passwords do not match."})
+        # Check if 'password' and 'confirm_password' exist before using them
+        if "password" in data and "confirm_password" in data:
+            if data["password"] != data["confirm_password"]:
+                raise serializers.ValidationError("Passwords do not match.")
         return data
 
     def create(self, validated_data):
@@ -93,9 +95,9 @@ class ActivitiesListSerializer(serializers.ModelSerializer):
             "user",
             "timeCreated",
             "distance",
-            "elapsed_time"
+            "elapsed_time",
+            "time_started"
         ]
-
 
     def validate(self, data):
         if data["password"] != data["confirm_password"]:

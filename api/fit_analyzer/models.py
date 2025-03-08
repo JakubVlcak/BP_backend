@@ -6,9 +6,10 @@ from django.contrib.auth.models import User
 class Activities(models.Model):
     ActivityID = models.BigAutoField(primary_key=True)  
     user = models.ForeignKey(User, on_delete=models.CASCADE)  
-    timeCreated = models.DateTimeField()
+    timeCreated = models.DateTimeField(auto_now_add=True)
     distance = models.DecimalField(max_digits=15, decimal_places=3, blank=True, null=True)
     elapsed_time = models.DurationField()
+    time_started = models.DateTimeField(null=True)
     def __str__(self):
         return f"Activity {self.ActivityID} by {self.user.userName}"
 
