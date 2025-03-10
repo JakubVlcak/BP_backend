@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 from .models import Activities, Record
-
+from django.db.models import Avg
 
 
 
@@ -87,7 +87,7 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         return user
     
 class ActivitiesListSerializer(serializers.ModelSerializer):
-
+    avg_power = serializers.SerializerMethodField()
     class Meta:
         model = Activities
         fields = [
@@ -96,8 +96,24 @@ class ActivitiesListSerializer(serializers.ModelSerializer):
             "timeCreated",
             "distance",
             "elapsed_time",
-            "time_started"
+            "time_started",
+            "avg_power",
+            "avg_speed",
+            "avg_heartrate",
+            "avg_cadence",
+            "avg_temperature",
+            "max_power",
+            "max_speed",
+            "max_heartrate",
+            "max_cadence",
+            "max_temperature",
+            "ascended_elevation",
+            "total_work_kJ"
         ]
+
+    def get_avg_power(self, obj):
+        avg_power = obj.records.aggregate(avg_power=Avg("power"))["avg_power"]
+        return avg_power if avg_power is not None else 0
 
     def validate(self, data):
         if data["password"] != data["confirm_password"]:
