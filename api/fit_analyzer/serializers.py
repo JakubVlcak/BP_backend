@@ -108,7 +108,9 @@ class ActivitiesListSerializer(serializers.ModelSerializer):
             "max_cadence",
             "max_temperature",
             "ascended_elevation",
-            "total_work_kJ"
+            "total_work_kJ",
+            "position_lat",
+            "position_long"
         ]
 
     def get_avg_power(self, obj):
@@ -130,4 +132,5 @@ class ActivitiesListSerializer(serializers.ModelSerializer):
             email=validated_data["email"],
         )
         return user
-    
+class StatsSerializer(serializers.Serializer):
+    total_activities = serializers.IntegerField()

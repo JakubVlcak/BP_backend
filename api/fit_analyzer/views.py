@@ -81,6 +81,25 @@ class RecordViewSet(viewsets.ModelViewSet):
         queryset = Record.objects.filter(activity_id=activity_id)
         return queryset
 
+class StatsView(APIView):
+    """
+    API view to retrieve user activity statistics.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user  # Get the logged-in user
+
+        # Get user activities
+        activities = Activities.objects.filter(user=user)
+
+        # Aggregating statistics
+        total_activities = activities.count()
+
+        stats_data = {
+            "total_activities": total_activities,
+        }   
+        return Response(stats_data, status=status.HTTP_200_OK)
 
 class FitFileParseView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -147,10 +166,14 @@ class FitFileParseView(APIView):
             if records_to_create:
                 first = records_to_create[0].timestamp
                 last = records_to_create[-1].timestamp
+                first_position_lat = records_to_create[0].position_lat
+                first_position_long = records_to_create[0].position_long
                 new_activity.elapsed_time = last - first
                 new_activity.distance = records_to_create[-1].distance / 1000
                 new_activity.time_started = first
                 
+                new_activity.position_lat = first_position_lat * (180 / 2147483648)
+                new_activity.position_long = first_position_long * (180 / 2147483648)
                 
                 new_activity.avg_power = total_power / power_count if power_count > 0 else 0
                 new_activity.avg_heartrate = total_heartrate / heartrate_count if heartrate_count > 0 else 0
@@ -213,3 +236,4 @@ class RegisterView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

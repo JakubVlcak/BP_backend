@@ -22,6 +22,8 @@ class Activities(models.Model):
     max_temperature = models.BigIntegerField(null=True)
     ascended_elevation = models.BigIntegerField(null=True)
     total_work_kJ = models.BigIntegerField(null=True)
+    position_lat = models.BigIntegerField(blank=True, null=True) 
+    position_long = models.BigIntegerField(blank=True, null=True) 
 
     def __str__(self):
         return f"Activity {self.ActivityID} by {self.user.userName}"

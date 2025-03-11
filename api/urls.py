@@ -49,5 +49,6 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('upload/', views.FitFileParseView.as_view(), name='fit-file-upload'),
     path('api/activities/<int:activity_id>/records/', views.RecordViewSet.as_view({'get': 'list', 'post': 'create'}), name='record-list'),
+    path("api/stats/", views.StatsView.as_view(), name="stats"),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
 ]
