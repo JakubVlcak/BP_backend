@@ -110,7 +110,17 @@ class ActivitiesListSerializer(serializers.ModelSerializer):
             "ascended_elevation",
             "total_work_kJ",
             "position_lat",
-            "position_long"
+            "position_long",
+            "biggest_climb",
+            "best_5s_power",
+            "best_15s_power",
+            "best_1min_power",
+            "best_2min_power",
+            "best_5min_power",
+            "best_10min_power",
+            "best_20min_power",
+            "best_30min_power",
+            "best_1h_power"
         ]
 
     def get_avg_power(self, obj):
@@ -134,3 +144,16 @@ class ActivitiesListSerializer(serializers.ModelSerializer):
         return user
 class StatsSerializer(serializers.Serializer):
     total_activities = serializers.IntegerField()
+    total_distance = serializers.IntegerField()
+    total_elevation_gain = serializers.IntegerField()
+    total_work_kJ = serializers.IntegerField()
+    longest_ride = serializers.IntegerField()
+    best_5s_power = serializers.IntegerField()
+    best_15s_power = serializers.IntegerField()
+    best_1min_power = serializers.IntegerField()
+    best_2min_power = serializers.IntegerField()
+    best_5min_power = serializers.IntegerField()
+    best_10min_power = serializers.IntegerField()
+    best_20min_power = serializers.IntegerField()
+    best_30min_power = serializers.IntegerField()
+    best_1h_power = serializers.IntegerField()

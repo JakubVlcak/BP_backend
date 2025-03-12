@@ -14,6 +14,7 @@ from fitparse import FitFile
 from decimal import Decimal
 from decimal import ROUND_HALF_UP
 from datetime import datetime
+from django.db.models import Sum, F, Max
 
 from .serializers import RegisterSerializer
 
@@ -95,11 +96,40 @@ class StatsView(APIView):
 
         # Aggregating statistics
         total_activities = activities.count()
-
+        total_distance = activities.aggregate(total_distance=Sum("distance"))["total_distance"] or 0
+        #total_time 
+        total_elevation_gain = activities.aggregate(total_elevation_gain=Sum("ascended_elevation"))["total_elevation_gain"] or 0
+        total_work_kJ = activities.aggregate(total_work_kJ=Sum("total_work_kJ"))["total_work_kJ"] or 0
+        longest_ride = activities.aggregate(longest_ride=Max("distance"))["longest_ride"] or 0
+        biggest_climb_elevation_gain = activities.aggregate(biggest_climb_elevation_gain=Max("ascended_elevation"))["biggest_climb_elevation_gain"] or 0
+        best_5s_power = activities.aggregate(best_5s_power=Max("best_5s_power"))["best_5s_power"] or 0
+        best_15s_power = activities.aggregate(best_15s_power=Max("best_15s_power"))["best_15s_power"] or 0
+        best_1min_power = activities.aggregate(best_1min_power=Max("best_1min_power"))["best_1min_power"] or 0
+        best_2min_power = activities.aggregate(best_2min_power=Max("best_2min_power"))["best_2min_power"] or 0
+        best_5min_power = activities.aggregate(best_5min_power=Max("best_5min_power"))["best_5min_power"] or 0
+        best_10min_power = activities.aggregate(best_10min_power=Max("best_10min_power"))["best_10min_power"] or 0
+        best_20min_power = activities.aggregate(best_20min_power=Max("best_20min_power"))["best_20min_power"] or 0
+        best_30min_power = activities.aggregate(best_30min_power=Max("best_30min_power"))["best_30min_power"] or 0
+        best_1h_power = activities.aggregate(best_1h_power=Max("best_1h_power"))["best_1h_power"] or 0
         stats_data = {
             "total_activities": total_activities,
+            "total_distance": total_distance,
+            "total_elevation_gain": total_elevation_gain,
+            "total_work_kJ": total_work_kJ,
+            "longest_ride": longest_ride,
+            "biggest_climb_elevation_gain": biggest_climb_elevation_gain,
+            "best_5s_power": best_5s_power,
+            "best_15s_power": best_15s_power,
+            "best_1min_power": best_1min_power,
+            "best_2min_power": best_2min_power,
+            "best_5min_power": best_5min_power,
+            "best_10min_power": best_10min_power,
+            "best_20min_power": best_20min_power,
+            "best_30min_power": best_30min_power,
+            "best_1h_power": best_1h_power,
         }   
         return Response(stats_data, status=status.HTTP_200_OK)
+
 
 class FitFileParseView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -122,18 +152,36 @@ class FitFileParseView(APIView):
             max_power = max_speed = max_heartrate = max_cadence = max_temperature = float('-inf')
             total_ascended_elevation = 0  
             last_altitude = None  
+            
             power_count = speed_count = heartrate_count = cadence_count = temperature_count = 0
             total_work_kJ = 0
+
+            # Define power tracking variables
+            durations = [5, 15, 60, 120, 300, 600, 1200, 1800, 3600]  # Durations in seconds
+            power_windows = {d: [] for d in durations}
+            power_sums = {d: 0 for d in durations}
+            best_powers = {d: 0 for d in durations}
 
             for record in fitfile.get_messages('record'):
                 data = {field.name: field.value for field in record}
 
                 if "power" in data and data["power"] is not None:
-                    total_power += data["power"]
+                    power_value = data["power"]
+                    total_power += power_value
                     power_count += 1
-                    max_power = max(max_power, data["power"])
+                    max_power = max(max_power, power_value)
+                    total_work_kJ += power_value / 1000  # Convert W to kJ
 
-                    total_work_kJ += data["power"] / 1000  # (W) * 1 sec / 1000
+                    # **Update Rolling Windows for Each Duration**
+                    for d in durations:
+                        power_windows[d].append(power_value)
+                        power_sums[d] += power_value
+
+                        if len(power_windows[d]) > d:  
+                            power_sums[d] -= power_windows[d].pop(0)  # Remove oldest value
+        
+                        best_powers[d] = max(best_powers[d], power_sums[d] / min(len(power_windows[d]), d))
+
 
                 if "speed" in data and data["speed"] is not None:
                     total_speed += data["speed"]
@@ -160,7 +208,8 @@ class FitFileParseView(APIView):
                     if last_altitude is not None and current_altitude > last_altitude:
                         total_ascended_elevation += (current_altitude - last_altitude)
                     last_altitude = current_altitude
-
+                        
+                    
                 self.append_record(new_activity, records_to_create, data)
 
             if records_to_create:
@@ -190,7 +239,20 @@ class FitFileParseView(APIView):
 
                 new_activity.total_work_kJ = total_work_kJ
                 new_activity.ascended_elevation = total_ascended_elevation
+
+                new_activity.best_5s_power = best_powers[5]
+                new_activity.best_15s_power = best_powers[15]
+                new_activity.best_1min_power = best_powers[60]
+                new_activity.best_2min_power = best_powers[120]
+                new_activity.best_5min_power = best_powers[300]
+                new_activity.best_10min_power = best_powers[600]
+                new_activity.best_20min_power = best_powers[1200]
+                new_activity.best_30min_power = best_powers[1800]
+                new_activity.best_1h_power = best_powers[3600]
+
+
                 new_activity.save()
+    
 
             Record.objects.bulk_create(records_to_create)
             return Response({"message": "File parsed and data saved successfully."}, status=status.HTTP_201_CREATED)
@@ -211,7 +273,7 @@ class FitFileParseView(APIView):
             altitude=data.get('altitude'),
             heartRate=data.get('heart_rate'),
             speed=data.get('speed')
-        ))
+        ))  
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
     def post(self, request):

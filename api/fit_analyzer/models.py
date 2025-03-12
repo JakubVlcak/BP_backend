@@ -22,8 +22,18 @@ class Activities(models.Model):
     max_temperature = models.BigIntegerField(null=True)
     ascended_elevation = models.BigIntegerField(null=True)
     total_work_kJ = models.BigIntegerField(null=True)
-    position_lat = models.BigIntegerField(blank=True, null=True) 
-    position_long = models.BigIntegerField(blank=True, null=True) 
+    position_lat = models.DecimalField(max_digits=15, decimal_places=8, blank=True, null=True) 
+    position_long = models.DecimalField(max_digits=15, decimal_places=8, blank=True, null=True)
+    biggest_climb = models.BigIntegerField(null=True)
+    best_5s_power = models.BigIntegerField(null=True)
+    best_15s_power = models.BigIntegerField(null=True)
+    best_1min_power = models.BigIntegerField(null=True)
+    best_2min_power = models.BigIntegerField(null=True)
+    best_5min_power = models.BigIntegerField(null=True)
+    best_10min_power = models.BigIntegerField(null=True)
+    best_20min_power = models.BigIntegerField(null=True)
+    best_30min_power = models.BigIntegerField(null=True)
+    best_1h_power = models.BigIntegerField(null=True)
 
     def __str__(self):
         return f"Activity {self.ActivityID} by {self.user.userName}"
