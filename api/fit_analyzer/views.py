@@ -18,10 +18,15 @@ from django.db.models import Sum, F, Max
 
 from .serializers import RegisterSerializer
 
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+
 
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 logger = logging.getLogger(__name__)
+
+
 class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
@@ -46,11 +51,10 @@ class ActivitiesViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ActivitiesListSerializer
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Activities.objects.none()  
-
+    queryset = Activities.objects.none()
     def get_queryset(self):
-        # Filter activities for the authenticated user
-        return Activities.objects.filter(user=self.request.user)
+        return Activities.objects.filter(user=self.request.user).order_by("-time_started")
+        
     
 
 class RecordViewSet(viewsets.ModelViewSet):
@@ -276,15 +280,25 @@ class FitFileParseView(APIView):
         ))  
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        username = request.data.get("username")
+        password = request.data.get("password")
         user = authenticate(username=username, password=password)
 
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key,
-                             "username":username})
+            csrf_token = get_token(request)  
+            
+            response = Response({
+                "token": token.key,
+                "username": username,
+                "csrfToken": csrf_token,  
+            })
+            
+            response.set_cookie("csrftoken", csrf_token, httponly=True)  
+            return response
+
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class RegisterView(APIView):
