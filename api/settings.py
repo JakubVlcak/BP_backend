@@ -11,16 +11,21 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import environ
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n((edln1e7e%s#hcz68&^4+*88l$2%eskwuobfsew5-lhxjbw5'
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -83,11 +88,11 @@ WSGI_APPLICATION = 'api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fit_analyzer',  # Replace with your database name
-        'USER': 'postgres',  # Replace with your database user
-        'PASSWORD': 'postgres',  # Replace with your database password
-        'HOST': 'localhost',  # Replace with your database host (default is localhost)
-        'PORT': '5432',  # Replace with your database port (default is 5432)
+        'NAME': env("DB_NAME"),  # Replace with your database name
+        'USER': env("DB_USER"),  # Replace with your database user
+        'PASSWORD': env("DB_PASSWORD"),  # Replace with your database password
+        'HOST': env("DB_HOST"),  # Replace with your database host (default is localhost)
+        'PORT': env("DB_PORT"),  # Replace with your database port (default is 5432)
     }
 }
 
@@ -148,7 +153,7 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",     
+    env("CORS_ORIGINS"),     
 ]
 
 CORS_ALLOW_HEADERS = [
