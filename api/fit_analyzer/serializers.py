@@ -17,8 +17,8 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["url", "name"]
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
-    confirm_password = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
+    password1 = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
+    password2 = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
 
     class Meta:
         model = User
