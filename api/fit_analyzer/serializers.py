@@ -16,8 +16,8 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         model = Group
         fields = ["url", "name"]
 class RegisterSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
-    password2 = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
+    password = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
+    confirm_password = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
 
     class Meta:
         model = User
@@ -50,6 +50,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data.get("email", ""),
         )
         return user
+
+    
+
+
 
 class RecordSerializer(serializers.ModelSerializer):
     class Meta:
