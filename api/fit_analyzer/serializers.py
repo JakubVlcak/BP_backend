@@ -15,7 +15,6 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Group
         fields = ["url", "name"]
-
 class RegisterSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
     password2 = serializers.CharField(write_only=True, required=True, style={"input_type": "password"})
@@ -25,8 +24,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
-            "password1",
-            "password2",
+            "password",
+            "confirm_password",
             "first_name",
             "last_name",
             "email",
@@ -34,7 +33,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             "is_active",
             "date_joined",
         ]
-        read_only_fields = ["is_staff", "is_active", "date_joined"] 
+        read_only_fields = ["is_staff", "is_active", "date_joined"]
+
+    def validate(self, data):
+        if data["password"] != data["confirm_password"]:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop("confirm_password", None)
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            password=validated_data["password"],
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+            email=validated_data.get("email", ""),
+        )
+        return user
 
 class RecordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -66,25 +81,11 @@ class ActivitiesSerializer(serializers.ModelSerializer):
             "timeCreated",
             "records", 
         ]
+    
 
 
-    def validate(self, data):
-        # Check if 'password' and 'confirm_password' exist before using them
-        if "password" in data and "confirm_password" in data:
-            if data["password"] != data["confirm_password"]:
-                raise serializers.ValidationError("Passwords do not match.")
-        return data
 
-    def create(self, validated_data):
-        validated_data.pop("confirm_password")
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            password=validated_data["password"],
-            first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
-            email=validated_data["email"],
-        )
-        return user
+    
     
 class ActivitiesListSerializer(serializers.ModelSerializer):
     avg_power = serializers.SerializerMethodField()
